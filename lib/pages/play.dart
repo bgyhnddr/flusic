@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:media_notification/media_notification.dart';
 
 import '../services/system.dart';
 import '../widget/time_picker.dart';
@@ -34,6 +35,11 @@ class PlayState extends State<Play> {
 
   Map<String, dynamic> music;
 
+  bool play = false;
+  String reportPogress = "0:0";
+
+  bool pausing = false;
+
   String formatTime(int milliseconds) {
     return DateFormat.Hms()
         .format(DateTime.fromMillisecondsSinceEpoch(milliseconds, isUtc: true));
@@ -43,9 +49,11 @@ class PlayState extends State<Play> {
     return RawMaterialButton(
         onPressed: () {
           if (duration.inSeconds > 0) {
-            AudioPlayerState.PLAYING == playerState
-                ? audioPlayer.pause()
-                : audioPlayer.resume();
+            if (AudioPlayerState.PLAYING == playerState) {
+              audioPlayer.pause();
+            } else {
+              audioPlayer.resume();
+            }
           }
         },
         child: new Icon(
@@ -84,6 +92,15 @@ class PlayState extends State<Play> {
     changingPosition = false;
   }
 
+  Future showNotification() {
+    return MediaNotification.show(
+        title: _currentFile, author: 'loveq', play: play);
+  }
+
+  void hideNotification() {
+    MediaNotification.hide();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -94,6 +111,8 @@ class PlayState extends State<Play> {
       if (mounted) {
         setState(() {
           playerState = s;
+          play = playerState == AudioPlayerState.PLAYING;
+          showNotification();
         });
       }
     });
@@ -101,7 +120,8 @@ class PlayState extends State<Play> {
       if (mounted) {
         setState(() {
           duration = d;
-          _progress = position.inSeconds;
+          reportPogress =
+              "${formatTime(position.inMilliseconds)}/${formatTime(duration.inMilliseconds)}";
         });
       }
     });
@@ -115,10 +135,24 @@ class PlayState extends State<Play> {
           if (!draging && duration.inSeconds != 0) {
             _progress = position.inSeconds;
           }
+          reportPogress =
+              "${formatTime(position.inMilliseconds)}/${formatTime(duration.inMilliseconds)}";
         });
       }
     });
     loadMusic();
+
+    MediaNotification.setListener('pause', () {
+      play = false;
+      audioPlayer.pause();
+    });
+
+    MediaNotification.setListener('play', () {
+      play = true;
+      audioPlayer.resume();
+    });
+
+    showNotification();
   }
 
   @override
@@ -240,5 +274,6 @@ class PlayState extends State<Play> {
       audioPlayer = null;
     });
     super.dispose();
+    hideNotification();
   }
 }

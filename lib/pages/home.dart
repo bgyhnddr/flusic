@@ -29,8 +29,9 @@ class _MyHomePageState extends State<MyHomePage> {
       return ListView.separated(
         separatorBuilder: (BuildContext context, int index) => new Divider(),
         itemBuilder: (BuildContext context, int index) {
+          var item = musicList[index];
           return Dismissible(
-            key: Key(index.toString()),
+            key: Key(UniqueKey().toString()),
             confirmDismiss: (direction) async {
               bool result = await showDialog<bool>(
                 context: context,
@@ -58,14 +59,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 },
               );
-              if (result == true) {
-                service.musicService.removeMusic(index);
-              }
               return result;
             },
             onDismissed: (direction) {
               setState(() {
-                musicList = service.musicService.musicList;
+                service.musicService.removeMusic(index);
               });
             },
             background: Align(
@@ -74,9 +72,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     padding: EdgeInsets.only(right: 12),
                     child: Icon(Icons.delete))),
             child: ListTile(
-              title: Text(musicList[index]["title"].toString()),
-              subtitle: Text(formatTime(
-                  int.tryParse(musicList[index]["time"].toString()))),
+              title: Text(item["title"].toString()),
+              subtitle: Text(formatTime(int.tryParse(item["time"].toString()))),
               trailing: Icon(Icons.chevron_right),
               onTap: () {
                 Navigator.push(context,
@@ -110,11 +107,11 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(title: Text('flusic'), actions: <Widget>[
-          new IconButton(
+          IconButton(
               icon: const Icon(Icons.add),
               onPressed: () {
                 Navigator.push<bool>(context,
-                    new MaterialPageRoute(builder: (BuildContext context) {
+                    MaterialPageRoute(builder: (BuildContext context) {
                   return FileSelector();
                 })).then((bool val) {
                   if (val == true) {
