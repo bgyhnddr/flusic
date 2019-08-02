@@ -29,6 +29,8 @@ dependencies:
   simple_permissions: "^0.1.9"
   path: "^1.6.2"
   audioplayers: "^0.13.1"
+  audio_notification:
+    path: ../flutter/audio_notification
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:media_notification/media_notification.dart';
+import 'package:audio_notification/audio_notification.dart';
 
 import '../services/system.dart';
 import '../widget/time_picker.dart';
@@ -35,14 +35,13 @@ class PlayState extends State<Play> {
 
   Map<String, dynamic> music;
 
-  bool play = false;
-  String reportPogress = "0:0";
-
-  bool pausing = false;
-
   String formatTime(int milliseconds) {
     return DateFormat.Hms()
         .format(DateTime.fromMillisecondsSinceEpoch(milliseconds, isUtc: true));
+  }
+
+  String get reportTime {
+    return "${formatTime(position.inMilliseconds)}/${formatTime(duration.inMilliseconds)}";
   }
 
   Widget controlButton() {
@@ -83,6 +82,8 @@ class PlayState extends State<Play> {
         });
       });
     });
+    AudioNotification.show(title: _currentFile, content: reportTime);
+    AudioNotification.setPlayState(false);
   }
 
   Future setPosition(int pos) async {
@@ -90,15 +91,6 @@ class PlayState extends State<Play> {
     changingPosition = true;
     await audioPlayer.seek(position);
     changingPosition = false;
-  }
-
-  Future showNotification() {
-    return MediaNotification.show(
-        title: _currentFile, author: 'loveq', play: play);
-  }
-
-  void hideNotification() {
-    MediaNotification.hide();
   }
 
   @override
@@ -111,8 +103,10 @@ class PlayState extends State<Play> {
       if (mounted) {
         setState(() {
           playerState = s;
-          play = playerState == AudioPlayerState.PLAYING;
-          showNotification();
+          Future.delayed(const Duration(milliseconds: 1000), () {
+            AudioNotification.setPlayState(
+                playerState == AudioPlayerState.PLAYING);
+          });
         });
       }
     });
@@ -120,9 +114,8 @@ class PlayState extends State<Play> {
       if (mounted) {
         setState(() {
           duration = d;
-          reportPogress =
-              "${formatTime(position.inMilliseconds)}/${formatTime(duration.inMilliseconds)}";
         });
+        AudioNotification.setContent(reportTime);
       }
     });
     audioPlayer.onAudioPositionChanged.listen((Duration d) {
@@ -135,24 +128,18 @@ class PlayState extends State<Play> {
           if (!draging && duration.inSeconds != 0) {
             _progress = position.inSeconds;
           }
-          reportPogress =
-              "${formatTime(position.inMilliseconds)}/${formatTime(duration.inMilliseconds)}";
+          AudioNotification.setContent(reportTime);
         });
       }
     });
+    AudioNotification.setMethodCallHandler((play) {
+      if (play) {
+        audioPlayer.resume();
+      } else {
+        audioPlayer.pause();
+      }
+    });
     loadMusic();
-
-    MediaNotification.setListener('pause', () {
-      play = false;
-      audioPlayer.pause();
-    });
-
-    MediaNotification.setListener('play', () {
-      play = true;
-      audioPlayer.resume();
-    });
-
-    showNotification();
   }
 
   @override
@@ -274,6 +261,6 @@ class PlayState extends State<Play> {
       audioPlayer = null;
     });
     super.dispose();
-    hideNotification();
+    AudioNotification.hide();
   }
 }
