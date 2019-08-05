@@ -30,7 +30,8 @@ dependencies:
   path: "^1.6.2"
   audioplayers: "^0.13.1"
   audio_notification:
-    path: ../flutter/audio_notification
+    git:
+      url: git://github.com/bgyhnddr/audio_notification.git
 
 dev_dependencies:
   flutter_test:

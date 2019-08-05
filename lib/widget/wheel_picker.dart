@@ -92,11 +92,13 @@ class WheelPickerState extends State<WheelPicker> {
       currentIndex = widget.index;
       childrenLength = widget.children.length;
       wheelScroll = renderWheelScroll();
-      controller.animateToItem(
-        widget.index,
-        curve: Curves.ease,
-        duration: Duration(milliseconds: 300),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.animateToItem(
+          widget.index,
+          curve: Curves.ease,
+          duration: Duration(milliseconds: 300),
+        );
+      });
     }
   }
 

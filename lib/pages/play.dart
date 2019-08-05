@@ -103,10 +103,8 @@ class PlayState extends State<Play> {
       if (mounted) {
         setState(() {
           playerState = s;
-          Future.delayed(const Duration(milliseconds: 1000), () {
-            AudioNotification.setPlayState(
-                playerState == AudioPlayerState.PLAYING);
-          });
+          AudioNotification.setPlayState(
+              playerState == AudioPlayerState.PLAYING);
         });
       }
     });
@@ -114,13 +112,19 @@ class PlayState extends State<Play> {
       if (mounted) {
         setState(() {
           duration = d;
+          if (!(duration == d)) {
+            AudioNotification.setContent(reportTime);
+          }
         });
-        AudioNotification.setContent(reportTime);
       }
     });
     audioPlayer.onAudioPositionChanged.listen((Duration d) {
       if (mounted) {
         setState(() {
+          if (position.inSeconds != d.inSeconds) {
+            AudioNotification.setContent(reportTime);
+          }
+
           if (!changingPosition) {
             position = d;
             service.musicService.setPos(widget.index, position.inSeconds);
@@ -128,7 +132,6 @@ class PlayState extends State<Play> {
           if (!draging && duration.inSeconds != 0) {
             _progress = position.inSeconds;
           }
-          AudioNotification.setContent(reportTime);
         });
       }
     });
