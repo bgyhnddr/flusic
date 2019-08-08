@@ -13,7 +13,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "15ae999e0e800721ec8bf7d04dc3bff89ddd0ad0"
+      resolved-ref: a2d5f8b117d14a8a7ce9decb0c4dec686d4079ce
       url: "git://github.com/bgyhnddr/audio_notification.git"
     source: git
     version: "0.0.1"

@@ -40,10 +40,6 @@ class PlayState extends State<Play> {
         .format(DateTime.fromMillisecondsSinceEpoch(milliseconds, isUtc: true));
   }
 
-  String get reportTime {
-    return "${formatTime(position.inMilliseconds)}/${formatTime(duration.inMilliseconds)}";
-  }
-
   Widget controlButton() {
     return RawMaterialButton(
         onPressed: () {
@@ -82,7 +78,7 @@ class PlayState extends State<Play> {
         });
       });
     });
-    AudioNotification.show(title: _currentFile, content: reportTime);
+    AudioNotification.show(title: _currentFile, content: "loveq");
     AudioNotification.setPlayState(false);
   }
 
@@ -110,21 +106,16 @@ class PlayState extends State<Play> {
     });
     audioPlayer.onDurationChanged.listen((Duration d) {
       if (mounted) {
-        setState(() {
-          duration = d;
-          if (!(duration == d)) {
-            AudioNotification.setContent(reportTime);
-          }
-        });
+        if (!(duration == d)) {
+          setState(() {
+            duration = d;
+          });
+        }
       }
     });
     audioPlayer.onAudioPositionChanged.listen((Duration d) {
       if (mounted) {
         setState(() {
-          if (position.inSeconds != d.inSeconds) {
-            AudioNotification.setContent(reportTime);
-          }
-
           if (!changingPosition) {
             position = d;
             service.musicService.setPos(widget.index, position.inSeconds);
@@ -135,11 +126,11 @@ class PlayState extends State<Play> {
         });
       }
     });
-    AudioNotification.setMethodCallHandler((play) {
-      if (play) {
-        audioPlayer.resume();
-      } else {
+    AudioNotification.setMethodCallHandler((method) {
+      if (playerState == AudioPlayerState.PLAYING) {
         audioPlayer.pause();
+      } else {
+        audioPlayer.resume();
       }
     });
     loadMusic();
