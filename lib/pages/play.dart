@@ -127,10 +127,14 @@ class PlayState extends State<Play> {
       }
     });
     AudioNotification.setMethodCallHandler((method) {
-      if (playerState == AudioPlayerState.PLAYING) {
+      if (method == "noisy") {
         audioPlayer.pause();
       } else {
-        audioPlayer.resume();
+        if (playerState == AudioPlayerState.PLAYING) {
+          audioPlayer.pause();
+        } else {
+          audioPlayer.resume();
+        }
       }
     });
     loadMusic();
