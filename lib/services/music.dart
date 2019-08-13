@@ -54,14 +54,18 @@ class MusicService {
   }
 
   Map<String, dynamic> getMusic(int index) {
-    if (index < _musicList.length) {
-      return _musicList[index];
+    if (index < musicList.length) {
+      return musicList[index];
     }
     return null;
   }
 
   void removeMusic(int index) {
     musicList.removeAt(index);
+    service.setString(music_key, json.encode(musicList).toString());
+  }
+
+  void setMusicList() {
     service.setString(music_key, json.encode(musicList).toString());
   }
 
@@ -76,5 +80,19 @@ class MusicService {
 
   set musicList(List<Map<String, dynamic>> list) {
     _musicList = list;
+  }
+
+  static int _listining;
+
+  int get listening {
+    if (_listining == null) {
+      _listining = service.getInt(music_listening) ?? -1;
+    }
+    return _listining;
+  }
+
+  set listening(int value) {
+    _listining = value;
+    service.setInt(music_listening, value);
   }
 }

@@ -32,6 +32,9 @@ dependencies:
   audio_notification:
     git:
       url: git://github.com/bgyhnddr/audio_notification.git
+  slide_bar:
+    git: 
+      url: git://github.com/bgyhnddr/flutter_slide_bar.git
 
 dev_dependencies:
   flutter_test:

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart';
+import 'package:slide_bar/slide_bar.dart';
 import '../services/system.dart';
 
 class FileSelector extends StatefulWidget {
@@ -16,10 +17,11 @@ class FileSelectorState extends State<FileSelector> {
   SystemService service = new SystemService();
   Future<List<FileSystemEntity>> listFuture;
   List<FileSystemEntity> list = <FileSystemEntity>[];
+  bool loveq = true;
 
   void getFiles({String path}) {
     setState(() {
-      listFuture = service.fileService.getEntities(path: path);
+      listFuture = service.fileService.getEntities(path: path, loveq: loveq);
     });
   }
 
@@ -87,19 +89,75 @@ class FileSelectorState extends State<FileSelector> {
                     FileSystemEntity file =
                         list[service.fileService.root ? index : index - 1];
 
-                    return ListTile(
-                      leading: buildLeading(file),
-                      title: Text(basename(file.path)),
-                      onTap: () {
-                        if (FileSystemEntity.isDirectorySync(file.path)) {
-                          getFiles(path: file.path);
-                        } else {
-                          service.musicService
-                              .saveMusic(index: widget.index, path: file.path);
-                          Navigator.pop(context, true);
-                        }
-                      },
-                    );
+                    if (!FileSystemEntity.isDirectorySync(file.path) && loveq) {
+                      return SlideBar(
+                          backgroundColor:
+                              Theme.of(context).scaffoldBackgroundColor,
+                          child: ListTile(
+                            leading: Icon(Icons.insert_drive_file),
+                            title: Text(basename(file.path)),
+                            onTap: () {
+                              if (FileSystemEntity.isDirectorySync(file.path)) {
+                                getFiles(path: file.path);
+                              } else {
+                                service.musicService.saveMusic(
+                                    index: widget.index, path: file.path);
+                                Navigator.pop(context, true);
+                              }
+                            },
+                          ),
+                          items: [
+                            ActionItems(
+                                backgroudColor:
+                                    Theme.of(context).dialogBackgroundColor,
+                                icon: Icon(Icons.delete),
+                                onPress: () async {
+                                  if (await showDialog<bool>(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      // return object of type Dialog
+                                      return AlertDialog(
+                                        title: new Text("是否删除"),
+                                        content: new Text(
+                                            "将会删除${basename(file.path)}"),
+                                        actions: <Widget>[
+                                          // usually buttons at the bottom of the dialog
+                                          FlatButton(
+                                            child: new Text("取消"),
+                                            onPressed: () {
+                                              Navigator.of(context).pop(false);
+                                            },
+                                          ),
+                                          FlatButton(
+                                            child: new Text("确认"),
+                                            onPressed: () {
+                                              Navigator.of(context).pop(true);
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  )) {
+                                    file.deleteSync();
+                                    getFiles();
+                                  }
+                                })
+                          ]);
+                    } else {
+                      return ListTile(
+                        leading: buildLeading(file),
+                        title: Text(basename(file.path)),
+                        onTap: () {
+                          if (FileSystemEntity.isDirectorySync(file.path)) {
+                            getFiles(path: file.path);
+                          } else {
+                            service.musicService.saveMusic(
+                                index: widget.index, path: file.path);
+                            Navigator.pop(context, true);
+                          }
+                        },
+                      );
+                    }
                   },
                   itemCount:
                       service.fileService.root ? list.length : list.length + 1,
@@ -126,6 +184,24 @@ class FileSelectorState extends State<FileSelector> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: Text("打开音频")), body: buildContent());
+    return Scaffold(
+        appBar: AppBar(
+          title: Text("打开音频"),
+          actions: [
+            PopupMenuButton<bool>(
+                itemBuilder: (context) {
+                  return [
+                    PopupMenuItem(value: true, child: Text("loveq")),
+                    PopupMenuItem(value: false, child: Text("all"))
+                  ];
+                },
+                onSelected: (bool value) {
+                  loveq = value;
+                  getFiles();
+                },
+                onCanceled: () {})
+          ],
+        ),
+        body: buildContent());
   }
 }

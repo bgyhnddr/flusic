@@ -151,6 +151,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.99"
+  slide_bar:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "0d75b76bb3e183465ab10a1ec4049b23bd8d5c67"
+      url: "git://github.com/bgyhnddr/flutter_slide_bar.git"
+    source: git
+    version: "0.0.1"
   source_span:
     dependency: transitive
     description:

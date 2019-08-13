@@ -5,6 +5,7 @@ import 'package:path_provider_ex/path_provider_ex.dart';
 import 'package:flutter/foundation.dart' show required;
 import 'package:simple_permissions/simple_permissions.dart';
 import 'system.dart';
+import 'package:path/path.dart';
 
 class FileService {
   static FileService _cache;
@@ -35,20 +36,20 @@ class FileService {
         return _havePermission;
       }
 
-      /// check read permission
+      /// check write permission
       bool havePermission = await SimplePermissions.checkPermission(
-          Permission.ReadExternalStorage);
+          Permission.WriteExternalStorage);
 
       if (true == havePermission) {
-        // have read permission
-        print('have read permission');
+        // have write permission
+        print('have write permission');
         _havePermission = true;
       } else {
         /// have not wirte permission, request it
-        print('have not read permission, request it');
+        print('have not write permission, request it');
         PermissionStatus requestPermission =
             await SimplePermissions.requestPermission(
-                Permission.ReadExternalStorage);
+                Permission.WriteExternalStorage);
         if (PermissionStatus.authorized == requestPermission) {
           print('request external directroy permission successful.');
           _havePermission = true;
@@ -74,7 +75,8 @@ class FileService {
   }
 
   /// get FileSystemEntities from directory
-  Future<List<FileSystemEntity>> getEntities({String path}) async {
+  Future<List<FileSystemEntity>> getEntities(
+      {String path, bool loveq = true}) async {
     print('getEntities');
     if (!await checkPermission()) {
       print('get entities failed');
@@ -98,7 +100,15 @@ class FileService {
         currentDirectory.existsSync() &&
         FileSystemEntity.isDirectorySync(currentDirectory.path)) {
       /// signle directory
-      return currentDirectory.listSync();
+
+      var fileList = currentDirectory.listSync();
+      if (currentDirectory.path == rootDirectory.path && loveq) {
+        int loveqIndex = fileList.indexWhere((item) {
+          return basename(item.path).toLowerCase() == "loveq";
+        });
+        fileList = [fileList[loveqIndex]];
+      }
+      return fileList;
     }
 
     return null;

@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class WheelPicker<T> extends StatefulWidget {
@@ -85,7 +83,7 @@ class WheelPickerState extends State<WheelPicker> {
                 height: 32,
                 decoration: BoxDecoration(
                     border: Border(
-                        bottom: BorderSide(width: 1, color: Colors.white70))))
+                        bottom: BorderSide(width: 1, color: Colors.white70)))),
           ],
         ),
       )
