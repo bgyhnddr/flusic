@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audio_notification/audio_notification.dart';
 
+import 'home.dart';
 import '../services/system.dart';
 import '../widget/time_picker.dart';
 import 'package:flutter/material.dart';
@@ -143,20 +144,35 @@ class PlayState extends State<Play> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: Text('音频播放'), actions: <Widget>[
-          new IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                Navigator.push(context,
-                    new MaterialPageRoute(builder: (BuildContext context) {
-                  return FileSelector(index: widget.index);
-                })).then((change) {
-                  if (change) {
-                    loadMusic();
+        appBar: AppBar(
+            title: Text('音频播放'),
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    Navigator.of(context).pushReplacement(
+                        new MaterialPageRoute(builder: (BuildContext context) {
+                      return MyHomePage();
+                    }));
                   }
-                });
-              }),
-        ]),
+                }),
+            actions: <Widget>[
+              IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () {
+                    Navigator.push(context,
+                        new MaterialPageRoute(builder: (BuildContext context) {
+                      return FileSelector(index: widget.index);
+                    })).then((change) {
+                      if (change) {
+                        loadMusic();
+                      }
+                    });
+                  }),
+            ]),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
