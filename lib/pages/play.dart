@@ -85,6 +85,7 @@ class PlayState extends State<Play> {
 
   Future setPosition(int pos) async {
     position = Duration(seconds: pos);
+    service.musicService.setPos(widget.index, position.inSeconds);
     changingPosition = true;
     await audioPlayer.seek(position);
     changingPosition = false;
