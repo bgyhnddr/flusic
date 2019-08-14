@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'color_text.dart';
+
 class WheelPicker<T> extends StatefulWidget {
   WheelPicker(
       {@required this.children,
@@ -21,6 +23,7 @@ class WheelPicker<T> extends StatefulWidget {
 
 class WheelPickerState extends State<WheelPicker> {
   FixedExtentScrollController controller;
+  final double itemHeight = 40;
 
   int currentIndex;
   bool dragStart = false;
@@ -50,40 +53,49 @@ class WheelPickerState extends State<WheelPicker> {
           }
           return true;
         },
-        child: ListWheelScrollView.useDelegate(
-            onSelectedItemChanged: (int index) {
-              currentIndex = index;
-            },
-            childDelegate: ListWheelChildBuilderDelegate(
-                childCount: childrenLength,
-                builder: (BuildContext context, int index) {
-                  return Text(
-                    index.toString(),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontFamily: "LED",
-                        fontSize: 32,
-                        color: Color.fromARGB(
-                            widget.index == index ? 255 : 200, 255, 255, 255)),
-                  );
-                }),
-            perspective: 0.01,
-            controller: controller,
-            physics: widget.isScrolable
-                ? const AlwaysScrollableScrollPhysics()
-                : const NeverScrollableScrollPhysics(),
-            itemExtent: 40,
-            clipToSize: false),
+        child: Column(
+          children: <Widget>[
+            Expanded(child: LayoutBuilder(
+              builder: (context, constraints) {
+                return ListWheelScrollView.useDelegate(
+                    onSelectedItemChanged: (int index) {
+                      currentIndex = index;
+                    },
+                    childDelegate: ListWheelChildBuilderDelegate(
+                        childCount: childrenLength,
+                        builder: (BuildContext context, int index) {
+                          return ColorText(
+                            text: index.toString(),
+                            index: index,
+                            itemHeight: itemHeight,
+                            controller: controller,
+                          );
+                          // return Text(
+                          //   index.toString(),
+                          //   textAlign: TextAlign.center,
+                          //   style: TextStyle(
+                          //       fontFamily: "LED",
+                          //       fontSize: 32,
+                          //       color: Color.fromARGB(
+                          //           widget.index == index ? 255 : 200, 255, 255, 255)),
+                          // );
+                        }),
+                    perspective: 0.01,
+                    controller: controller,
+                    physics: widget.isScrolable
+                        ? const AlwaysScrollableScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
+                    itemExtent: itemHeight,
+                    clipToSize: false);
+              },
+            ))
+          ],
+        ),
       ),
       IgnorePointer(
         child: Wrap(
           children: <Widget>[
-            Container(
-                width: 38,
-                height: 32,
-                decoration: BoxDecoration(
-                    border: Border(
-                        bottom: BorderSide(width: 1, color: Colors.white70)))),
+            Container(decoration: BoxDecoration(color: Colors.white)),
           ],
         ),
       )
@@ -118,7 +130,6 @@ class WheelPickerState extends State<WheelPicker> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return wheelScroll;
   }
 }
