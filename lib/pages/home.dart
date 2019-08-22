@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:slide_bar/slide_bar.dart';
 
-import 'FileSelector.dart';
+import 'main_selector.dart';
 import 'play.dart';
 import '../services/system.dart';
 
@@ -126,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.push<bool>(context,
                     MaterialPageRoute(builder: (BuildContext context) {
-                  return FileSelector();
+                  return MainSelector();
                 })).then((bool val) {
                   if (val == true) {
                     getData();

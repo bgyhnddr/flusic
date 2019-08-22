@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audio_notification/audio_notification.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 
 import 'home.dart';
 import '../services/system.dart';
@@ -7,7 +10,7 @@ import '../widget/time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'FileSelector.dart';
+import 'file_selector.dart';
 
 class Play extends StatefulWidget {
   Play({this.index});
@@ -17,6 +20,7 @@ class Play extends StatefulWidget {
 }
 
 class PlayState extends State<Play> {
+  final GlobalKey key = GlobalKey();
   int _progress = 0;
   String _currentFile = '未选择';
   SystemService service = new SystemService();
@@ -33,6 +37,8 @@ class PlayState extends State<Play> {
 
   bool draging = false;
   bool changingPosition = false;
+
+  bool initPos = false;
 
   Map<String, dynamic> music;
 
@@ -64,21 +70,31 @@ class PlayState extends State<Play> {
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap);
   }
 
-  void loadMusic() {
+  void loadMusic() async {
     music = service.musicService.getMusic(widget.index);
-    path = music["path"].toString();
+    bool isLocal = false;
+    if (music["path"] != null) {
+      path = music["path"].toString();
+      isLocal = true;
+    } else {
+      path = music["url"];
+      if (music["taskId"] != null) {
+        var tasks = await service.fileService
+            .getTaskByTaskId(music["taskId"].toString());
+        if (tasks.length > 0) {
+          if (tasks.first.status == DownloadTaskStatus.complete) {
+            path = "${tasks.first.savedDir}/${tasks.first.filename}";
+            isLocal = true;
+          }
+        }
+      }
+    }
+
     _currentFile = music["title"].toString();
     time = int.tryParse(music['time'].toString()) ?? 0;
     position = Duration(seconds: time);
 
-    audioPlayer.setUrl(path, isLocal: true);
-    audioPlayer.seek(position).then((v) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          _progress = position.inSeconds;
-        });
-      });
-    });
+    await audioPlayer.setUrl(path, isLocal: isLocal);
     AudioNotification.show(title: _currentFile, content: "loveq");
     AudioNotification.setPlayState(false);
   }
@@ -107,6 +123,20 @@ class PlayState extends State<Play> {
       }
     });
     audioPlayer.onDurationChanged.listen((Duration d) {
+      if (!initPos) {
+        initPos = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          audioPlayer.seek(position).then((v) {
+            setState(() {
+              _progress = position.inSeconds;
+            });
+
+            key.currentState.setState(() {
+              _progress = position.inSeconds;
+            });
+          });
+        });
+      }
       if (mounted) {
         if (!(duration == d)) {
           setState(() {
@@ -154,6 +184,7 @@ class PlayState extends State<Play> {
                   if (Navigator.of(context).canPop()) {
                     Navigator.of(context).pop();
                   } else {
+                    service.musicService.listening = -1;
                     Navigator.of(context).pushReplacement(
                         new MaterialPageRoute(builder: (BuildContext context) {
                       return MyHomePage();
@@ -168,7 +199,7 @@ class PlayState extends State<Play> {
                         new MaterialPageRoute(builder: (BuildContext context) {
                       return FileSelector(index: widget.index);
                     })).then((change) {
-                      if (change) {
+                      if (change ?? false) {
                         loadMusic();
                       }
                     });
@@ -230,7 +261,8 @@ class PlayState extends State<Play> {
                       children: [
                         Text(formatTime(position.inMilliseconds)),
                         Expanded(
-                          child: new Slider(
+                          child: Slider(
+                            key: key,
                             value: _progress.toDouble(),
                             label: formatTime(_progress * 1000),
                             min: 0,

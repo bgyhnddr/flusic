@@ -12,13 +12,12 @@ Future<Null> initial() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   /// get service instance
-  SystemService service = new SystemService(prefs: prefs);
+  SystemService service = SystemService(prefs: prefs);
 
   /// get the fileService instance
-  FileService fileService = new FileService(systemService: service);
+  FileService fileService = FileService(systemService: service);
 
-  MusicService musicService = new MusicService(systemService: service);
-
+  MusicService(systemService: service);
 
   /// listen events
   service.listen((event) async {

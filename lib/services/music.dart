@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:path/path.dart';
 
@@ -22,12 +23,16 @@ class MusicService {
 
   static List<Map<String, dynamic>> _musicList;
 
-  void saveMusic({int index, String path}) {
+  Future saveMusic(
+      {int index, String title, String path, String taskId, String url}) async {
     Map<String, dynamic> music = {
-      "title": basename(path),
+      "title": title ?? basename(path),
       "path": path,
+      "taskId": taskId,
+      "url": url,
       'time': 0
     };
+
     if (index == null) {
       musicList.add(music);
     } else {
