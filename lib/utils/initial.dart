@@ -4,7 +4,6 @@ import 'package:simple_permissions/simple_permissions.dart';
 import '../services/system.dart';
 import '../services/file.dart';
 import '../services/music.dart';
-import 'constants.dart';
 
 /// initialize the app
 Future<Null> initial() async {

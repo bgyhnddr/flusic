@@ -41,11 +41,21 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {//签名配置
+        release {//发布版签名配置
+            storeFile file("D:/download/key.jks")//密钥文件路径
+            storePassword "709394"//密钥文件密码
+            keyAlias "beiguanyi"//key别名
+            keyPassword "709394"//key密码
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.release
         }
     }
 }
