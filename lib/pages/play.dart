@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:audio_notification/audio_notification.dart';
+import 'package:flusic/pages/main_selector.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 
 import 'home.dart';
@@ -9,8 +10,6 @@ import '../services/system.dart';
 import '../widget/time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import 'file_selector.dart';
 
 class Play extends StatefulWidget {
   Play({this.index});
@@ -70,7 +69,7 @@ class PlayState extends State<Play> {
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap);
   }
 
-  void loadMusic() async {
+  loadMusic() async {
     music = service.musicService.getMusic(widget.index);
     bool isLocal = false;
     if (music["path"] != null) {
@@ -94,6 +93,7 @@ class PlayState extends State<Play> {
     time = int.tryParse(music['time'].toString()) ?? 0;
     position = Duration(seconds: time);
 
+    duration = Duration.zero;
     await audioPlayer.setUrl(path, isLocal: isLocal);
     AudioNotification.show(title: _currentFile, content: "loveq");
     AudioNotification.setPlayState(false);
@@ -130,18 +130,13 @@ class PlayState extends State<Play> {
             setState(() {
               _progress = position.inSeconds;
             });
-
-            key.currentState.setState(() {
-              _progress = position.inSeconds;
-            });
           });
         });
       }
       if (mounted) {
         if (!(duration == d)) {
-          setState(() {
-            duration = d;
-          });
+          duration = d;
+          setState(() {});
         }
       }
     });
@@ -197,9 +192,11 @@ class PlayState extends State<Play> {
                   onPressed: () {
                     Navigator.push(context,
                         new MaterialPageRoute(builder: (BuildContext context) {
-                      return FileSelector(index: widget.index);
+                      return MainSelector(index: widget.index);
                     })).then((change) {
                       if (change ?? false) {
+                        initPos = false;
+                        _progress = 0;
                         loadMusic();
                       }
                     });

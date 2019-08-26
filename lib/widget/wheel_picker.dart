@@ -55,9 +55,8 @@ class WheelPickerState extends State<WheelPicker> {
         },
         child: Column(
           children: <Widget>[
-            Expanded(child: LayoutBuilder(
-              builder: (context, constraints) {
-                return ListWheelScrollView.useDelegate(
+            Expanded(
+                child: ListWheelScrollView.useDelegate(
                     onSelectedItemChanged: (int index) {
                       currentIndex = index;
                     },
@@ -70,15 +69,6 @@ class WheelPickerState extends State<WheelPicker> {
                             itemHeight: itemHeight,
                             controller: controller,
                           );
-                          // return Text(
-                          //   index.toString(),
-                          //   textAlign: TextAlign.center,
-                          //   style: TextStyle(
-                          //       fontFamily: "LED",
-                          //       fontSize: 32,
-                          //       color: Color.fromARGB(
-                          //           widget.index == index ? 255 : 200, 255, 255, 255)),
-                          // );
                         }),
                     perspective: 0.01,
                     controller: controller,
@@ -86,9 +76,7 @@ class WheelPickerState extends State<WheelPicker> {
                         ? const AlwaysScrollableScrollPhysics()
                         : const NeverScrollableScrollPhysics(),
                     itemExtent: itemHeight,
-                    clipToSize: false);
-              },
-            ))
+                    clipToSize: false))
           ],
         ),
       ),
@@ -107,7 +95,6 @@ class WheelPickerState extends State<WheelPicker> {
     controller = FixedExtentScrollController(initialItem: widget.index);
     currentIndex = widget.index;
     childrenLength = widget.children.length;
-    wheelScroll = new Container(width: 0.0, height: 0.0);
     super.initState();
   }
 
@@ -117,7 +104,6 @@ class WheelPickerState extends State<WheelPicker> {
     if (!dragStart) {
       currentIndex = widget.index;
       childrenLength = widget.children.length;
-      wheelScroll = renderWheelScroll();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         controller.animateToItem(
           widget.index,
@@ -130,6 +116,6 @@ class WheelPickerState extends State<WheelPicker> {
 
   @override
   Widget build(BuildContext context) {
-    return wheelScroll;
+    return renderWheelScroll();
   }
 }

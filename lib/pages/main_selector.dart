@@ -30,10 +30,10 @@ class MainSelectorState extends State<MainSelector>
           controller: tabcontroller,
           children: <Widget>[
             //创建之前写好的三个页面，万物皆是Widget
-            FileSelector(
+            CloudSelector(
               index: widget.index,
             ),
-            CloudSelector(
+            FileSelector(
               index: widget.index,
             )
           ],
@@ -41,8 +41,8 @@ class MainSelectorState extends State<MainSelector>
         bottomNavigationBar: TabBar(
           controller: tabcontroller,
           tabs: <Tab>[
-            Tab(text: "本地", icon: Icon(Icons.folder)),
             Tab(text: "网络", icon: Icon(Icons.cloud)),
+            Tab(text: "本地", icon: Icon(Icons.folder)),
           ],
         ));
   }

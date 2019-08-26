@@ -144,13 +144,10 @@ class FileService {
 
   Future<String> download(String url, String filename) async {
     var dir = await getApplicationSupportDirectory();
-    var path = Directory("${dir.path}/download");
+    var path = Directory("${dir.path}");
     if (!await checkPermission()) {
       print('get entities failed');
       return null;
-    }
-    if (!path.existsSync()) {
-      path.createSync();
     }
 
     var existsTask = await getTaskByFilename('$filename');
@@ -195,5 +192,10 @@ class FileService {
   cleanTask(String filename) async {
     await FlutterDownloader.loadTasksWithRawQuery(
         query: 'delete FROM task where file_name="$filename"');
+    var dir = await getApplicationSupportDirectory();
+    var file = File("${dir.path}/$filename");
+    if (file.existsSync()) {
+      file.deleteSync();
+    }
   }
 }

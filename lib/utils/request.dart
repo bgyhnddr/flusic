@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import '../utils/constants.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 
 import '../services/system.dart';
@@ -36,19 +38,6 @@ class Request {
         "filename": filename,
         "url": "https://www.loveq.cn/program_download.php?id=$id&dl=1"
       };
-
-      var tasks = await service.fileService.getTaskByFilename(filename);
-      if (tasks.length > 0) {
-        if (tasks.first.status == DownloadTaskStatus.complete &&
-            !File("${tasks.first.savedDir}/${tasks.first.filename}")
-                .existsSync()) {
-          await service.fileService.removeTask(tasks[0].taskId);
-        } else {
-          obj["taskId"] = tasks[0].taskId;
-          obj["status"] = tasks[0].status;
-          obj["progress"] = tasks[0].progress;
-        }
-      }
       result.add(obj);
     }
 
@@ -72,9 +61,50 @@ class Request {
         result.addAll(await getDocumentList(document, service));
       }
 
+      result = await dealTask(result, service);
+      saveCacheList(result, year, service);
       return result;
     } else {
       return result;
     }
+  }
+
+  static void saveCacheList(
+      List<Map<String, dynamic>> list, int year, SystemService service) {
+    service.setString("$online_music$year", json.encode(list).toString());
+  }
+
+  static Future<List<Map<String, dynamic>>> getCacheList(
+      int year, SystemService service) async {
+    var jsonString = service.getString("$online_music$year");
+    if (jsonString == null) {
+      return [];
+    }
+    List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+        json.decode(service.getString("$online_music$year")));
+
+    list = await dealTask(list, service);
+
+    return list;
+  }
+
+  static Future<List<Map<String, dynamic>>> dealTask(
+      List<Map<String, dynamic>> list, SystemService service) async {
+    for (var i = 0; i < list.length; i++) {
+      var tasks = await service.fileService
+          .getTaskByFilename(list[i]["filename"].toString());
+      if (tasks.length > 0) {
+        if (tasks.first.status == DownloadTaskStatus.complete &&
+            !File("${tasks.first.savedDir}/${tasks.first.filename}")
+                .existsSync()) {
+          await service.fileService.removeTask(tasks[0].taskId);
+        } else {
+          list[i]["taskId"] = tasks[0].taskId;
+          list[i]["status"] = tasks[0].status;
+          list[i]["progress"] = tasks[0].progress;
+        }
+      }
+    }
+    return list;
   }
 }

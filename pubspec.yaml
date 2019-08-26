@@ -34,8 +34,10 @@ dependencies:
   html: ^0.14.0+2
   flutter_downloader: ^1.1.9
   audio_notification:
-    git:
-      url: git://github.com/bgyhnddr/audio_notification.git
+    path: ../flutter/audio_notification/
+  # audio_notification:
+  #   git:
+  #     url: git://github.com/bgyhnddr/audio_notification.git
   slide_bar:
     git:
       url: git://github.com/bgyhnddr/flutter_slide_bar.git

@@ -11,11 +11,9 @@ packages:
   audio_notification:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: a76a5b25443d32a02bf0d4e83e4bbe0e5469675f
-      url: "git://github.com/bgyhnddr/audio_notification.git"
-    source: git
+      path: "..\\flutter\\audio_notification"
+      relative: true
+    source: path
     version: "0.0.1"
   audioplayers:
     dependency: "direct main"

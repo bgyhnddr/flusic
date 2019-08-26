@@ -26,6 +26,8 @@ class TimePickerState extends State<TimePicker> {
   List<int> minuteList;
   List<int> secondList;
 
+  LocalKey key = UniqueKey();
+
   Widget hourWidget;
   Widget minuteWidget;
   Widget secondWidget;
@@ -170,14 +172,18 @@ class TimePickerState extends State<TimePicker> {
   }
 
   @override
-  void didUpdateWidget(Widget oldWidget) {
+  void didUpdateWidget(TimePicker oldWidget) {
     super.didUpdateWidget(oldWidget);
     setTime(widget.time, widget.max);
+    if (oldWidget.max != widget.max) {
+      key = UniqueKey();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      key: key,
       children: <Widget>[
         Expanded(
           child: hourWidget,

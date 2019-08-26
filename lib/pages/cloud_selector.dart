@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:slide_bar/slide_bar.dart';
 
 import '../services/system.dart';
 import 'package:flusic/utils/request.dart';
@@ -14,7 +15,7 @@ class CloudSelector extends StatefulWidget {
 }
 
 class CloudSelectorState extends State<CloudSelector>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   SystemService service = new SystemService();
   final GlobalKey<RefreshIndicatorState> refreshIndicatorKey =
       new GlobalKey<RefreshIndicatorState>();
@@ -31,7 +32,17 @@ class CloudSelectorState extends State<CloudSelector>
   void initState() {
     super.initState();
     scheduleMicrotask(() {
-      refreshIndicatorKey.currentState.show();
+      Request.getCacheList(year, service).then((cacheList) {
+        if (cacheList.length == 0) {
+          refreshIndicatorKey.currentState.show();
+        } else {
+          if (mounted) {
+            setState(() {
+              list = cacheList;
+            });
+          }
+        }
+      });
 
       service.fileService.registerDownloadCallback(
           (String id, DownloadTaskStatus status, int progress) async {
@@ -68,7 +79,6 @@ class CloudSelectorState extends State<CloudSelector>
     super.build(context);
     return Scaffold(
         appBar: AppBar(title: Text(year.toString()), actions: [
-          IconButton(icon: Icon(Icons.ac_unit), onPressed: () {}),
           PopupMenuButton<int>(
               icon: Icon(Icons.filter_list),
               itemBuilder: (context) {
@@ -96,60 +106,109 @@ class CloudSelectorState extends State<CloudSelector>
             ///根据状态返回子孔健
             itemBuilder: (context, index) {
               Widget leading;
+              ActionItems action;
+              ListTile listTile;
               if (list[index]["status"] == DownloadTaskStatus.complete) {
-                leading = IconButton(
-                  icon: Icon(Icons.done),
-                  onPressed: () {},
+                leading = AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  child: IconButton(icon: Icon(Icons.done), onPressed: () {}),
                 );
-              } else if (list[index]["status"] == DownloadTaskStatus.enqueued ||
-                  list[index]["status"] == DownloadTaskStatus.running) {
-                var progress = (list[index]["progress"] ?? 0) / 100;
-
-                leading = GestureDetector(
-                    onTap: () {
-                      showDialog<bool>(
+                action = ActionItems(
+                    backgroudColor: Theme.of(context).dialogBackgroundColor,
+                    icon: Icon(Icons.delete),
+                    onPress: () async {
+                      if (await showDialog<bool>(
                         context: context,
                         builder: (BuildContext context) {
                           // return object of type Dialog
                           return AlertDialog(
-                            title: Text("取消任务"),
-                            content: Text(
-                                "是否取消${list[index]["filename"].toString()}下载"),
+                            title: new Text("是否删除"),
+                            content: new Text(
+                                "将会删除下载的${list[index]["filename"].toString()}"),
                             actions: <Widget>[
                               // usually buttons at the bottom of the dialog
                               FlatButton(
-                                child: Text("否"),
+                                child: new Text("取消"),
                                 onPressed: () {
                                   Navigator.of(context).pop(false);
                                 },
                               ),
                               FlatButton(
-                                child: Text("是"),
+                                child: new Text("确认"),
                                 onPressed: () {
                                   Navigator.of(context).pop(true);
                                 },
-                              )
+                              ),
                             ],
                           );
                         },
-                      ).then((val) async {
-                        if (val) {
-                          await service.fileService
-                              .cancelTask(list[index]["taskId"]);
-                        }
-                      });
-                    },
-                    child: Container(
-                        width: 48,
-                        height: 48,
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            value: progress == 0 ? null : progress)));
+                      )) {
+                        await service.fileService
+                            .cleanTask(list[index]["filename"]);
+                        list[index].remove("taskId");
+                        list[index].remove("status");
+                        list[index].remove("progress");
+                        setState(() {});
+                      }
+                    });
+              } else if (list[index]["status"] == DownloadTaskStatus.enqueued ||
+                  list[index]["status"] == DownloadTaskStatus.running) {
+                var progress = (list[index]["progress"] ?? 0) / 100;
+                leading = AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    child: GestureDetector(
+                        onTap: () {
+                          showDialog<bool>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              // return object of type Dialog
+                              return AlertDialog(
+                                title: Text("取消任务"),
+                                content: Text(
+                                    "是否取消${list[index]["filename"].toString()}下载"),
+                                actions: <Widget>[
+                                  // usually buttons at the bottom of the dialog
+                                  FlatButton(
+                                    child: Text("否"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(false);
+                                    },
+                                  ),
+                                  FlatButton(
+                                    child: Text("是"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(true);
+                                    },
+                                  )
+                                ],
+                              );
+                            },
+                          ).then((val) async {
+                            if (val) {
+                              await service.fileService
+                                  .cancelTask(list[index]["taskId"]);
+                            }
+                          });
+                        },
+                        child: Stack(
+                          alignment: AlignmentDirectional.center,
+                          children: <Widget>[
+                            Container(
+                                width: 48,
+                                height: 48,
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    value: progress == 0 ? null : progress)),
+                            Icon(Icons.stop)
+                          ],
+                        )));
               } else {
-                leading = IconButton(
+                leading = null;
+                action = ActionItems(
+                  backgroudColor: Theme.of(context).dialogBackgroundColor,
                   icon: Icon(Icons.file_download),
-                  onPressed: () async {
+                  onPress: () async {
                     var taskId = await service.fileService.download(
                         list[index]["url"].toString(),
                         list[index]["filename"].toString());
@@ -163,23 +222,30 @@ class CloudSelectorState extends State<CloudSelector>
                 );
               }
 
-              return ListTile(
-                title: Text(list[index]["title"].toString()),
-                subtitle: Text(
-                  list[index]["filename"].toString(),
-                ),
-                leading: AnimatedSwitcher(
-                    duration: Duration(milliseconds: 300), child: leading),
-                trailing: Icon(Icons.keyboard_arrow_right),
-                onTap: () async {
-                  await service.musicService.saveMusic(
-                      index: widget.index,
-                      title: list[index]["filename"].toString(),
-                      url: list[index]["url"].toString(),
-                      taskId: list[index]["taskId"]?.toString());
-                  Navigator.pop(context, true);
-                },
-              );
+              listTile = ListTile(
+                  title: Text(list[index]["title"].toString()),
+                  subtitle: Text(
+                    list[index]["filename"].toString(),
+                  ),
+                  leading: leading,
+                  trailing: Icon(Icons.keyboard_arrow_right),
+                  onTap: () async {
+                    await service.musicService.saveMusic(
+                        index: widget.index,
+                        title: list[index]["filename"].toString(),
+                        url: list[index]["url"].toString(),
+                        taskId: list[index]["taskId"]?.toString());
+                    Navigator.pop(context, true);
+                  });
+              if (list[index]["status"] == DownloadTaskStatus.enqueued ||
+                  list[index]["status"] == DownloadTaskStatus.running) {
+                return listTile;
+              } else {
+                return SlideBar(
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                    items: [action],
+                    child: listTile);
+              }
             },
 
             ///根据状态返回数量
