@@ -33,6 +33,7 @@ dependencies:
   http: ^0.12.0+2
   html: ^0.14.0+2
   flutter_downloader: ^1.1.9
+  share: ^0.6.2+1
   audio_notification:
     path: ../flutter/audio_notification/
   # audio_notification:

@@ -11,6 +11,8 @@ import '../widget/time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:share/share.dart';
+
 class Play extends StatefulWidget {
   Play({this.index});
   final int index;
@@ -96,7 +98,7 @@ class PlayState extends State<Play> {
     duration = Duration.zero;
     await audioPlayer.setUrl(path, isLocal: isLocal);
     AudioNotification.show(title: _currentFile, content: "loveq");
-    AudioNotification.setPlayState(false);
+    AudioNotification.setPlayState(playerState == AudioPlayerState.PLAYING);
   }
 
   Future setPosition(int pos) async {
@@ -169,6 +171,34 @@ class PlayState extends State<Play> {
 
   @override
   Widget build(BuildContext context) {
+    var actions = <Widget>[
+      IconButton(
+          icon: const Icon(Icons.edit),
+          onPressed: () {
+            Navigator.push(context,
+                new MaterialPageRoute(builder: (BuildContext context) {
+              return MainSelector(index: widget.index);
+            })).then((change) {
+              if (change ?? false) {
+                initPos = false;
+                _progress = 0;
+                loadMusic();
+              }
+            });
+          }),
+    ];
+    var music = service.musicService.getMusic(widget.index);
+    if (music["url"] != null) {
+      actions.insert(
+          0,
+          IconButton(
+              icon: const Icon(Icons.share),
+              onPressed: () {
+                Share.share(
+                    '${music["title"]} ${formatTime(position.inMilliseconds)} ${music["url"]}');
+              }));
+    }
+
     return Scaffold(
         appBar: AppBar(
             title: Text('音频播放'),
@@ -186,22 +216,7 @@ class PlayState extends State<Play> {
                     }));
                   }
                 }),
-            actions: <Widget>[
-              IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    Navigator.push(context,
-                        new MaterialPageRoute(builder: (BuildContext context) {
-                      return MainSelector(index: widget.index);
-                    })).then((change) {
-                      if (change ?? false) {
-                        initPos = false;
-                        _progress = 0;
-                        loadMusic();
-                      }
-                    });
-                  }),
-            ]),
+            actions: actions),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -31,12 +31,15 @@ class Request {
     List<Element> items = document.querySelectorAll('dl.clearfix[id]');
     for (int i = 0; i < items.length; i++) {
       var id = items[i].id.trim().replaceAll('program', '');
-      var filename = "${items[i].querySelector("dd").text.trim()}.mp3";
+      var dd = items[i].querySelectorAll("dd");
+      var filename = "${dd[0].text.trim()}.mp3";
+      var downloads = dd[1].text.trim();
       Map<String, dynamic> obj = {
         "id": id,
         "title": items[i].querySelector("dt").text.trim(),
         "filename": filename,
-        "url": "https://www.loveq.cn/program_download.php?id=$id&dl=1"
+        "url": "https://www.loveq.cn/program_download.php?id=$id&dl=1",
+        "downloads": downloads
       };
       result.add(obj);
     }

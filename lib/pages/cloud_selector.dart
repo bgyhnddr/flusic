@@ -24,6 +24,7 @@ class CloudSelectorState extends State<CloudSelector>
   List<int> years = [];
   List<Map<String, dynamic>> list = [];
   Map<String, dynamic> downList = {};
+  ScrollController controller = ScrollController();
 
   @override
   bool get wantKeepAlive => true;
@@ -39,6 +40,7 @@ class CloudSelectorState extends State<CloudSelector>
           if (mounted) {
             setState(() {
               list = cacheList;
+              scrollToListing();
             });
           }
         }
@@ -74,6 +76,38 @@ class CloudSelectorState extends State<CloudSelector>
     });
   }
 
+  bool isActive(int index) {
+    return service.musicService.musicList
+            .where((o) => o["title"] == list[index]["filename"])
+            .length >
+        0;
+  }
+
+  bool isPlaying(int index) {
+    return service.musicService.musicList[service.musicService.listening]
+            ["title"] ==
+        list[index]["filename"];
+  }
+
+  void scrollToListing() {
+    if (service.musicService.listening >= 0) {
+      double index = list
+          .indexWhere((o) =>
+              service.musicService.musicList[service.musicService.listening]
+                  ["title"] ==
+              o["filename"])
+          .toDouble();
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.animateTo(
+          85 * (index >= 0 ? index : 0),
+          curve: Curves.ease,
+          duration: Duration(milliseconds: 300),
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -98,12 +132,12 @@ class CloudSelectorState extends State<CloudSelector>
           onRefresh: () async {
             list = await Request.getList(year, service);
             setState(() {});
+            scrollToListing();
           },
-          child: ListView.builder(
+          child: ListView.separated(
             ///保持ListView任何情况都能滚动，解决在RefreshIndicator的兼容问题。
             physics: const AlwaysScrollableScrollPhysics(),
-
-            ///根据状态返回子孔健
+            controller: controller,
             itemBuilder: (context, index) {
               Widget leading;
               ActionItems action;
@@ -222,10 +256,29 @@ class CloudSelectorState extends State<CloudSelector>
                 );
               }
 
+              List<Widget> title = [Text(list[index]["title"].toString())];
+              if (isActive(index)) {
+                title.add(Icon(Icons.flag));
+              }
+              if (isPlaying(index)) {
+                title.add(Icon(Icons.play_arrow));
+              }
+
               listTile = ListTile(
-                  title: Text(list[index]["title"].toString()),
-                  subtitle: Text(
-                    list[index]["filename"].toString(),
+                  title: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: title,
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        list[index]["filename"].toString(),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text("下载${list[index]["downloads"]?.toString()}次")
+                    ],
                   ),
                   leading: leading,
                   trailing: Icon(Icons.keyboard_arrow_right),
@@ -250,6 +303,15 @@ class CloudSelectorState extends State<CloudSelector>
 
             ///根据状态返回数量
             itemCount: list.length,
+            separatorBuilder: (BuildContext context, int index) {
+              return LayoutBuilder(builder: (context, constraints) {
+                return Divider(
+                  color: Colors.white,
+                  indent: 12,
+                  endIndent: 12,
+                );
+              });
+            },
           ),
         ));
   }
