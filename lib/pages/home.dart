@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Widget buildBody() {
+  Widget buildBody(BuildContext context) {
     if (musicList.length == 0) {
       return Center(child: Text('无节目'));
     } else {
@@ -57,32 +57,45 @@ class _MyHomePageState extends State<MyHomePage> {
                   backgroudColor: Theme.of(context).dialogBackgroundColor,
                   icon: Icon(Icons.delete),
                   onPress: () async {
-                    if (await showDialog<bool>(
-                      context: context,
-                      builder: (BuildContext context) {
-                        // return object of type Dialog
-                        return AlertDialog(
-                          title: new Text("是否删除"),
-                          content: new Text(
-                              "将会删除${musicList[index]["title"].toString()}"),
-                          actions: <Widget>[
-                            // usually buttons at the bottom of the dialog
-                            FlatButton(
-                              child: new Text("取消"),
-                              onPressed: () {
-                                Navigator.of(context).pop(false);
-                              },
+                    var content = "将会删除${musicList[index]["title"].toString()}";
+                    if (await showGeneralDialog<bool>(
+                        barrierColor: Colors.black.withOpacity(0.5),
+                        transitionBuilder: (context, a1, a2, widget) {
+                          return Transform.scale(
+                            scale: a1.value,
+                            child: Opacity(
+                              opacity: a1.value,
+                              child: AlertDialog(
+                                shape: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(16.0)),
+                                title: new Text("是否删除"),
+                                content: new Text(content),
+                                actions: <Widget>[
+                                  // usually buttons at the bottom of the dialog
+                                  FlatButton(
+                                    child: new Text("取消"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(false);
+                                    },
+                                  ),
+                                  FlatButton(
+                                    child: new Text("确认"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(true);
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                            FlatButton(
-                              child: new Text("确认"),
-                              onPressed: () {
-                                Navigator.of(context).pop(true);
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    )) {
+                          );
+                        },
+                        transitionDuration: Duration(milliseconds: 200),
+                        barrierDismissible: true,
+                        barrierLabel: '',
+                        context: context,
+                        pageBuilder: (context, a1, a2) {
+                          return;
+                        })) {
                       setState(() {
                         service.musicService.removeMusic(index);
                       });
@@ -135,7 +148,7 @@ class _MyHomePageState extends State<MyHomePage> {
               }),
         ]),
         body: Center(
-          child: buildBody(),
+          child: buildBody(context),
         ));
   }
 }

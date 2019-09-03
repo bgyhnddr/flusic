@@ -114,35 +114,50 @@ class FileSelectorState extends State<FileSelector> {
                                     Theme.of(context).dialogBackgroundColor,
                                 icon: Icon(Icons.delete),
                                 onPress: () async {
-                                  if (await showDialog<bool>(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      // return object of type Dialog
-                                      return AlertDialog(
-                                        title: new Text("是否删除"),
-                                        content: new Text(
-                                            "将会删除${basename(file.path)}"),
-                                        actions: <Widget>[
-                                          // usually buttons at the bottom of the dialog
-                                          FlatButton(
-                                            child: new Text("取消"),
-                                            onPressed: () {
-                                              Navigator.of(context).pop(false);
-                                            },
+                                  if (await showGeneralDialog<bool>(
+                                      barrierColor:
+                                          Colors.black.withOpacity(0.5),
+                                      transitionBuilder:
+                                          (context, a1, a2, widget) {
+                                        return Transform.scale(
+                                          scale: a1.value,
+                                          child: Opacity(
+                                            opacity: a1.value,
+                                            child: AlertDialog(
+                                              title: new Text("是否删除"),
+                                              content: new Text(
+                                                  "将会删除${basename(file.path)}"),
+                                              actions: <Widget>[
+                                                // usually buttons at the bottom of the dialog
+                                                FlatButton(
+                                                  child: new Text("取消"),
+                                                  onPressed: () {
+                                                    Navigator.of(context)
+                                                        .pop(false);
+                                                  },
+                                                ),
+                                                FlatButton(
+                                                  child: new Text("确认"),
+                                                  onPressed: () {
+                                                    Navigator.of(context)
+                                                        .pop(true);
+                                                  },
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                          FlatButton(
-                                            child: new Text("确认"),
-                                            onPressed: () {
-                                              Navigator.of(context).pop(true);
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  )) {
+                                        );
+                                      },
+                                      transitionDuration:
+                                          Duration(milliseconds: 200),
+                                      barrierDismissible: true,
+                                      barrierLabel: '',
+                                      context: context,
+                                      pageBuilder: (context, a1, a2) {
+                                        return;
+                                      })) {
                                     await service.fileService
                                         .cleanTask(basename(file.path));
-                                    file.deleteSync();
                                     getFiles();
                                   }
                                 })
