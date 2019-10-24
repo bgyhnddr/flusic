@@ -23,13 +23,19 @@ class MusicService {
   static List<Map<String, dynamic>> _musicList;
 
   Future saveMusic(
-      {int index, String title, String path, String taskId, String url}) async {
+      {int index,
+      String title,
+      int year = 0,
+      String path,
+      String taskId,
+      String url}) async {
     Map<String, dynamic> music = {
       "title": title ?? basename(path),
       "path": path,
       "taskId": taskId,
       "url": url,
-      'time': 0
+      'time': 0,
+      'year': year
     };
 
     if (index == null) {

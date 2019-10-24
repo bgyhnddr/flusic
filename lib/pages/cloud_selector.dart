@@ -31,6 +31,11 @@ class CloudSelectorState extends State<CloudSelector>
 
   @override
   void initState() {
+    int musicYear =
+        service.musicService.musicList[service.musicService.listening]['year'];
+    if (musicYear != null && musicYear > 0) {
+      year = musicYear;
+    }
     super.initState();
     scheduleMicrotask(() {
       Request.getCacheList(year, service).then((cacheList) {
@@ -104,7 +109,7 @@ class CloudSelectorState extends State<CloudSelector>
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         controller.animateTo(
-          85 * (index >= 0 ? index : 0),
+          85.0 * (index >= 0 ? index : 0),
           curve: Curves.ease,
           duration: Duration(milliseconds: 300),
         );
@@ -309,6 +314,7 @@ class CloudSelectorState extends State<CloudSelector>
                   onTap: () async {
                     await service.musicService.saveMusic(
                         index: widget.index,
+                        year: year,
                         title: list[index]["filename"].toString(),
                         url: list[index]["url"].toString(),
                         taskId: list[index]["taskId"]?.toString());
