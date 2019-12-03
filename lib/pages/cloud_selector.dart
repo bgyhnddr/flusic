@@ -31,8 +31,11 @@ class CloudSelectorState extends State<CloudSelector>
 
   @override
   void initState() {
-    int musicYear =
-        service.musicService.musicList[service.musicService.listening]['year'];
+    int musicYear = (service.musicService.musicList.length >
+                service.musicService.listening &&
+            service.musicService.listening >= 0)
+        ? service.musicService.musicList[service.musicService.listening]['year']
+        : DateTime.now().year;
     if (musicYear != null && musicYear > 0) {
       year = musicYear;
     }

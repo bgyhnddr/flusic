@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show required;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_permissions/simple_permissions.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'file.dart';
 import 'music.dart';
 
@@ -18,6 +19,8 @@ class SystemService {
     if (null == _cache) {
       print('initiate SystemService');
       _cache = new SystemService._internal(prefs: prefs);
+
+      FlutterDownloader.initialize();
     } else {
       print('SystemService initiated already');
     }
