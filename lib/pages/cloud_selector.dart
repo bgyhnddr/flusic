@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:isolate';
+import 'dart:ui';
 
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:slide_bar/slide_bar.dart';
@@ -26,6 +28,19 @@ class CloudSelectorState extends State<CloudSelector>
   Map<String, dynamic> downList = {};
   ScrollController controller = ScrollController();
 
+  static void downloadCallback(
+      String id, DownloadTaskStatus status, int progress) {
+    final SendPort send =
+        IsolateNameServer.lookupPortByName('downloader_send_port');
+    print('callback');
+    if (send != null) {
+      print([id, status, progress]);
+      send.send([id, status, progress]);
+    }
+  }
+
+  ReceivePort _port = ReceivePort();
+
   @override
   bool get wantKeepAlive => true;
 
@@ -40,6 +55,36 @@ class CloudSelectorState extends State<CloudSelector>
       year = musicYear;
     }
     super.initState();
+
+    FlutterDownloader.registerCallback(downloadCallback);
+    IsolateNameServer.registerPortWithName(
+        _port.sendPort, 'downloader_send_port');
+    _port.listen((dynamic data) async {
+      String id = data[0];
+      DownloadTaskStatus status = data[1];
+      int progress = data[2];
+
+      var task = list.where((o) {
+        return o["taskId"] == id;
+      }).toList();
+
+      if (task.length > 0) {
+        if (status == DownloadTaskStatus.enqueued ||
+            status == DownloadTaskStatus.running ||
+            status == DownloadTaskStatus.complete) {
+          task.first["status"] = status.value;
+          task.first["progress"] = progress;
+        } else {
+          await service.fileService.removeTask(task.first["taskId"].toString());
+
+          task.first.remove("taskId");
+          task.first.remove("status");
+          task.first.remove("progress");
+        }
+      }
+      setState(() {});
+    });
+
     scheduleMicrotask(() {
       Request.getCacheList(year, service).then((cacheList) {
         if (cacheList.length == 0) {
@@ -54,27 +99,27 @@ class CloudSelectorState extends State<CloudSelector>
         }
       });
 
-      service.fileService.registerDownloadCallback(
-          (String id, DownloadTaskStatus status, int progress) async {
-        var task = list.where((o) {
-          return o["taskId"] == id;
-        }).toList();
-        if (task.length > 0) {
-          if (status == DownloadTaskStatus.enqueued ||
-              status == DownloadTaskStatus.running ||
-              status == DownloadTaskStatus.complete) {
-            task.first["status"] = status;
-            task.first["progress"] = progress;
-          } else {
-            await service.fileService
-                .removeTask(task.first["taskId"].toString());
-            task.first.remove("taskId");
-            task.first.remove("status");
-            task.first.remove("progress");
-          }
-        }
-        setState(() {});
-      });
+      // service.fileService.registerDownloadCallback(
+      //     (String id, DownloadTaskStatus status, int progress) async {
+      //   var task = list.where((o) {
+      //     return o["taskId"] == id;
+      //   }).toList();
+      //   if (task.length > 0) {
+      //     if (status == DownloadTaskStatus.enqueued ||
+      //         status == DownloadTaskStatus.running ||
+      //         status == DownloadTaskStatus.complete) {
+      //       task.first["status"] = status;
+      //       task.first["progress"] = progress;
+      //     } else {
+      //       await service.fileService
+      //           .removeTask(task.first["taskId"].toString());
+      //       task.first.remove("taskId");
+      //       task.first.remove("status");
+      //       task.first.remove("progress");
+      //     }
+      //   }
+      //   setState(() {});
+      // });
     });
 
     Request.getYears().then((val) {
@@ -154,7 +199,7 @@ class CloudSelectorState extends State<CloudSelector>
               Widget leading;
               ActionItems action;
               ListTile listTile;
-              if (list[index]["status"] == DownloadTaskStatus.complete) {
+              if (list[index]["status"] == DownloadTaskStatus.complete.value) {
                 leading = AnimatedSwitcher(
                   duration: Duration(milliseconds: 300),
                   child: IconButton(icon: Icon(Icons.done), onPressed: () {}),
@@ -208,8 +253,9 @@ class CloudSelectorState extends State<CloudSelector>
                         setState(() {});
                       }
                     });
-              } else if (list[index]["status"] == DownloadTaskStatus.enqueued ||
-                  list[index]["status"] == DownloadTaskStatus.running) {
+              } else if (list[index]["status"] ==
+                      DownloadTaskStatus.enqueued.value ||
+                  list[index]["status"] == DownloadTaskStatus.running.value) {
                 var progress = (list[index]["progress"] ?? 0) / 100;
                 leading = AnimatedSwitcher(
                     duration: Duration(milliseconds: 300),
@@ -282,7 +328,7 @@ class CloudSelectorState extends State<CloudSelector>
                     setState(() {
                       list[index]["taskId"] = taskId;
                       list[index]["progress"] = 0;
-                      list[index]["status"] = DownloadTaskStatus.running;
+                      list[index]["status"] = DownloadTaskStatus.running.value;
                     });
                   },
                 );
@@ -323,8 +369,8 @@ class CloudSelectorState extends State<CloudSelector>
                         taskId: list[index]["taskId"]?.toString());
                     Navigator.pop(context, true);
                   });
-              if (list[index]["status"] == DownloadTaskStatus.enqueued ||
-                  list[index]["status"] == DownloadTaskStatus.running) {
+              if (list[index]["status"] == DownloadTaskStatus.enqueued.value ||
+                  list[index]["status"] == DownloadTaskStatus.running.value) {
                 return listTile;
               } else {
                 return SlideBar(
@@ -347,5 +393,13 @@ class CloudSelectorState extends State<CloudSelector>
             },
           ),
         ));
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    IsolateNameServer.removePortNameMapping("downloader_send_port");
+    _port.close();
+    super.dispose();
   }
 }

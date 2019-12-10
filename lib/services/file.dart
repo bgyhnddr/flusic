@@ -143,6 +143,7 @@ class FileService {
   }
 
   Future<String> download(String url, String filename) async {
+    await initFlutterDownloader();
     var dir = await getApplicationSupportDirectory();
     var path = Directory("${dir.path}");
     if (!await checkPermission()) {
@@ -170,26 +171,31 @@ class FileService {
   }
 
   Future<List<DownloadTask>> getTaskByTaskId(String taskId) async {
+    await initFlutterDownloader();
     final tasks = await FlutterDownloader.loadTasksWithRawQuery(
         query: 'SELECT * FROM task where task_id="$taskId"');
     return tasks;
   }
 
   Future<List<DownloadTask>> getTaskByFilename(String filename) async {
+    await initFlutterDownloader();
     final tasks = await FlutterDownloader.loadTasksWithRawQuery(
         query: 'SELECT * FROM task where file_name="$filename"');
     return tasks;
   }
 
   cancelTask(String taskId) async {
+    await initFlutterDownloader();
     await FlutterDownloader.cancel(taskId: taskId);
   }
 
   removeTask(String taskId) async {
+    await initFlutterDownloader();
     await FlutterDownloader.remove(taskId: taskId);
   }
 
   cleanTask(String filename) async {
+    await initFlutterDownloader();
     await FlutterDownloader.loadTasksWithRawQuery(
         query: 'delete FROM task where file_name="$filename"');
     var dir = await getApplicationSupportDirectory();
@@ -197,5 +203,16 @@ class FileService {
     if (file.existsSync()) {
       file.deleteSync();
     }
+  }
+
+  clearAllTask() async {
+    await initFlutterDownloader();
+    await FlutterDownloader.loadTasksWithRawQuery(query: 'delete FROM task');
+  }
+
+  initFlutterDownloader() async {
+    try {
+      await FlutterDownloader.initialize();
+    } catch (e) {}
   }
 }

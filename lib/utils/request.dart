@@ -74,18 +74,17 @@ class Request {
 
   static void saveCacheList(
       List<Map<String, dynamic>> list, int year, SystemService service) {
-    service.setString("$online_music$year", json.encode(list).toString());
+    service.setString("online_music$year", json.encode(list).toString());
   }
 
   static Future<List<Map<String, dynamic>>> getCacheList(
       int year, SystemService service) async {
-    var jsonString = service.getString("$online_music$year");
+    var jsonString = service.getString("online_music$year");
     if (jsonString == null) {
       return [];
     }
     List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
-        json.decode(service.getString("$online_music$year")));
-
+        json.decode(service.getString("online_music$year")));
     list = await dealTask(list, service);
 
     return list;
@@ -103,7 +102,7 @@ class Request {
           await service.fileService.removeTask(tasks[0].taskId);
         } else {
           list[i]["taskId"] = tasks[0].taskId;
-          list[i]["status"] = tasks[0].status;
+          list[i]["status"] = tasks[0].status.value;
           list[i]["progress"] = tasks[0].progress;
         }
       }

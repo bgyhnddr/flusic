@@ -19,8 +19,9 @@ class SystemService {
     if (null == _cache) {
       print('initiate SystemService');
       _cache = new SystemService._internal(prefs: prefs);
-
-      FlutterDownloader.initialize();
+      try {
+        FlutterDownloader.initialize();
+      } catch (e) {}
     } else {
       print('SystemService initiated already');
     }
